@@ -60,7 +60,8 @@ public final class CommonEvents {
       PlayerEntity player = event.getPlayer();
       SHPlayers.getPlayerData(player).updateStats(player);
 
-      if (!(player instanceof ServerPlayerEntity)) return;
+      if (!(player instanceof ServerPlayerEntity))
+         return;
       ServerPlayerEntity sp = (ServerPlayerEntity) event.getPlayer();
       ScalingHealth.LOGGER.debug("Sending login packet to player {}", player);
       ClientLoginMessage msg = new ClientLoginMessage(SHDifficulty.areaMode(), (float) SHDifficulty.maxValue());
@@ -68,9 +69,11 @@ public final class CommonEvents {
    }
 
    @SubscribeEvent
-   public static void onSpawn(LivingSpawnEvent.CheckSpawn event){
-      if(!(event.getEntityLiving() instanceof MobEntity)) return;
-      if(event.getSpawnReason() == SpawnReason.SPAWNER) spawnerSpawns.add(event.getEntityLiving().getUniqueID());
+   public static void onSpawn(LivingSpawnEvent.CheckSpawn event) {
+      if (!(event.getEntityLiving() instanceof MobEntity))
+         return;
+      if (event.getSpawnReason() == SpawnReason.SPAWNER)
+         spawnerSpawns.add(event.getEntityLiving().getUniqueID());
    }
 
    @SubscribeEvent(priority = EventPriority.HIGHEST)
@@ -84,7 +87,7 @@ public final class CommonEvents {
       amount *= multi;
 
       // Additional XP from blights.
-      if(entity instanceof MobEntity) {
+      if (entity instanceof MobEntity) {
          if (SHMobs.isBlight((MobEntity) entity)) {
             amount *= SHMobs.xpBlightBoost();
          }
@@ -93,33 +96,42 @@ public final class CommonEvents {
    }
 
    @SubscribeEvent
-   public static void playerTick(TickEvent.PlayerTickEvent event){
-      if(event.phase == TickEvent.Phase.START) return;
+   public static void playerTick(TickEvent.PlayerTickEvent event) {
+      if (event.phase == TickEvent.Phase.START)
+         return;
       PlayerEntity player = event.player;
 
-      if (player.world.isRemote) return;
+      if (player.world.isRemote)
+         return;
       SHPlayers.getPlayerData(player).tick(player);
 
       if (changedLevelThisTick) {
          changedLevelThisTick = false;
-         SHPlayers.getPlayerData(player).updateStats(player);
+         try {
+            SHPlayers.getPlayerData(player).updateStats(player);
+         } catch (IllegalStateException e) {
+            ScalingHealth.LOGGER.error("Error updating stats for player {}", player.getName().getString());
+         }
       }
    }
 
    @SubscribeEvent(priority = EventPriority.LOWEST)
    public static void onLevelChange(PlayerXpEvent.LevelChange event) {
-      if(!EnabledFeatures.healthXpEnabled() || event.isCanceled()) return;
-      changedLevelThisTick = true; //delay the player update until after the event, so that the Exp on the player was updated.
+      if (!EnabledFeatures.healthXpEnabled() || event.isCanceled())
+         return;
+      changedLevelThisTick = true; // delay the player update until after the event, so that the Exp on the player
+                                   // was updated.
    }
 
    // TODO APRILS FOOLS?
-//   public static void onPlayerDied(LivingDeathEvent event) {
-//      if (event.getEntity() == null || !(event.getEntity() instanceof PlayerEntity))
-//         return;
-//
-//      PlayerEntity player = (PlayerEntity) event.getEntity();
-//      SoundUtils.play(player, Registration.PLAYER_DIED.get());
-//   }
+   // public static void onPlayerDied(LivingDeathEvent event) {
+   // if (event.getEntity() == null || !(event.getEntity() instanceof
+   // PlayerEntity))
+   // return;
+   //
+   // PlayerEntity player = (PlayerEntity) event.getEntity();
+   // SoundUtils.play(player, Registration.PLAYER_DIED.get());
+   // }
 
    @SubscribeEvent
    public static void onPlayerSleepInBed(PlayerSleepInBedEvent event) {
